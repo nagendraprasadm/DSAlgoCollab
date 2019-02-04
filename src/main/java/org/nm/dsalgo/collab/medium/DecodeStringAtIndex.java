@@ -49,19 +49,25 @@ public class DecodeStringAtIndex {
 	public String decodeAtIndex(String S, int K) {
 		logger.debug("Input String [{}] Index [{}]", S, K);
 		int len = S.length();
-		double[] decLen = new double[len];
+//		long[] decLen = new long[len];
 		int encIdx = -1;
-		double decIdx = K;
-		char[] charArr = S.toCharArray();
+		long decIdx = K;
+
+		long curLen = 0;
+		long prevLen = 0;
+
 		logger.debug("Starting the first loop");
 		for (int i = 0; i < len; i++) {
-			double prevLen = i == 0 ? 0 : decLen[i - 1];
-			char curChar = charArr[i];
+			// long prevLen = i == 0 ? 0 : decLen[i - 1];
+			char curChar = S.charAt(i);
 			if (Character.isLetter(curChar)) {
 				logger.debug("\tCharacter at [{}] is letter [{}]", i, curChar);
-				decLen[i] = prevLen + 1;
-				logger.debug("\t\tDecrypted Length Set to {}", decLen[i]);
-				if (decLen[i] == K) {
+				// decLen[i] = prevLen + 1;
+				curLen = prevLen + 1;
+//				logger.debug("\t\tDecrypted Length Set to {}", decLen[i]);
+				logger.debug("\t\tDecrypted Length Set to {}", curLen);
+				// if (decLen[i] == K) {
+				if (curLen == K) {
 					logger.debug("\t\tCharacter Found for input String {} and index {} - [{}]",
 							new Object[] { S, K, new String(new char[] { curChar }) });
 					return new String(new char[] { curChar });
@@ -69,22 +75,28 @@ public class DecodeStringAtIndex {
 			} else if (Character.isDigit(curChar)) {
 				logger.debug("\tCharacter at [{}] is Integer [{}]", i, curChar);
 				int curInt = Character.getNumericValue(curChar);
-				decLen[i] = prevLen + ((curInt - 1) * prevLen);
-				logger.debug("\t\tDecrypted Length Set to {}", decLen[i]);
-				if (decLen[i] >= K) {
+				// decLen[i] = curInt * prevLen;
+				curLen = curInt * prevLen;
+				// logger.debug("\t\tDecrypted Length Set to {}", decLen[i]);
+				logger.debug("\t\tDecrypted Length Set to {}", curLen);
+				// if (decLen[i] >= K) {
+				if (curLen >= K) {
+//					logger.debug("\t\tProcessing integer at Ecrypted String index [{}] Its Decrypted Length [{}]", i,
+//							decLen[i]);
 					logger.debug("\t\tProcessing integer at Ecrypted String index [{}] Its Decrypted Length [{}]", i,
-							decLen[i]);
+							curLen);
 					encIdx = i;
 					break;
 				}
 			}
+			prevLen = curLen;
 		}
 
 		logger.debug("Starting Second Loop Encrypted End Index [{}]", encIdx);
 		if (encIdx > -1) {
 			while (encIdx >= 0) {
 
-				char curChar = charArr[encIdx];
+				char curChar = S.charAt(encIdx);
 
 				if (decIdx == 0) {
 					logger.debug("Decrypted Index is 0 returned character is - {}", new String(new char[] { curChar }));
@@ -94,14 +106,20 @@ public class DecodeStringAtIndex {
 				if (Character.isDigit(curChar)) {
 					logger.debug("\tCharacter at Encrypted index {} is integer {}", encIdx,
 							Character.getNumericValue(curChar));
-					if (decLen[encIdx] > decIdx) {
+					// if (decLen[encIdx] > decIdx) {
+					if (curLen > decIdx) {
+//						logger.debug(
+//								"\t\tEncrypted Index {} Decrypted String length {} and previous decrypted length {}",
+//								new Object[] { encIdx, decLen[encIdx], decLen[encIdx - 1] });
 						logger.debug(
 								"\t\tEncrypted Index {} Decrypted String length {} and previous decrypted length {}",
-								new Object[] { encIdx, decLen[encIdx], decLen[encIdx - 1] });
-						double prevLen = decLen[encIdx - 1];
+								new Object[] { encIdx, curLen, curLen / Character.getNumericValue(curChar) });
+
+						// long prevLen = decLen[encIdx - 1];
+						prevLen = curLen / Character.getNumericValue(curChar);
 						logger.debug("\t\tDecrypted Index Originial {} ", decIdx);
-						if(prevLen <= decIdx) {
-							double rem = decIdx % prevLen;
+						if (prevLen <= decIdx) {
+							long rem = decIdx % prevLen;
 							if (rem == 0 && decIdx > prevLen) {
 								decIdx = prevLen;
 							} else {
@@ -110,22 +128,26 @@ public class DecodeStringAtIndex {
 						}
 						logger.debug("\t\tDecrypted Index Changed {} ", decIdx);
 					} else {
-						if (Character.isDigit(charArr[encIdx - 1])) {
+						if (Character.isDigit(S.charAt(encIdx - 1))) {
+							curLen = prevLen;
 							encIdx--;
 							continue;
 						} else {
 							logger.debug("\t\tCharacter Found for input string {} index {} - [{}]",
-									new Object[] { S, K, new String(new char[] { charArr[encIdx - 1] }) });
-							return new String(new char[] { charArr[encIdx - 1] });
+									new Object[] { S, K, new String(new char[] { S.charAt(encIdx - 1) }) });
+							return new String(new char[] { S.charAt(encIdx - 1) });
 						}
 					}
 				} else if (Character.isLetter(curChar)) {
 					logger.debug("\tCharacter at Encrypted index {} is Character {}", encIdx, curChar);
-					if (decLen[encIdx] == decIdx) {
+					prevLen = curLen - 1;
+//					if (decLen[encIdx] == decIdx) {
+					if (curLen == decIdx) {
 						logger.debug("\t\tCharacter Found is [{}]", new String(new char[] { curChar }));
 						return new String(new char[] { curChar });
 					}
 				}
+				curLen = prevLen;
 				encIdx--;
 			}
 
@@ -152,7 +174,7 @@ public class DecodeStringAtIndex {
 				strBuilder.append(temp);
 				System.gc();
 			}
-			
+
 		}
 		return strBuilder.toString();
 	}
